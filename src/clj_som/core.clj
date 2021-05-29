@@ -250,3 +250,25 @@
           u-matrix
           (reverse (range (alength ^"[D" (aget u-matrix 0)))))
   nil)
+
+(defn export-u-matrix [^"[[D" u-matrix ^String png-filename]
+  (let [scale 5
+        x-size (alength u-matrix)
+        y-size (alength ^"[D" (aget u-matrix 0))
+        bi (java.awt.image.BufferedImage.
+            (* x-size scale)
+            (* y-size scale)
+            java.awt.image.BufferedImage/TYPE_INT_ARGB)
+        g (.createGraphics bi)]
+    (reduce (fn [n x]
+              (reduce (fn [n y]
+                        (.setColor g (new java.awt.Color
+                                          (float (aget u-matrix x y))
+                                          (float (aget u-matrix x y))
+                                          (float (aget u-matrix x y))))
+                        (.fillRect g (* x scale) (* y scale) scale scale))
+                      nil
+                      (range y-size)))
+            nil
+            (range x-size))
+    (javax.imageio.ImageIO/write bi "png" (java.io.File. png-filename))))
