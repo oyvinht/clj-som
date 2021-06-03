@@ -1,5 +1,7 @@
 (ns som.core-test
-  (:require [clojure.test :refer :all]
+  (:require [clj-async-profiler.core :as prof]
+            [clojure.test :refer :all]
+            [criterium.core :as c]
             [som.core :refer :all]))
 
 (deftest test-euclidean-dist
@@ -46,3 +48,27 @@
         (pprint-u-matrix um)
         (export-u-matrix um "u-matrix.png")))))
        
+(defn read-iris-data []
+  (map (fn [line]
+         (map (fn [col]
+                (try (Double/parseDouble col)
+                     (catch Exception e col)))
+              (clojure.string/split line #",")))
+       (rest ; Skip header
+        (clojure.string/split
+         (slurp "test/clj_som/iris-ammended.csv")
+         #"\n"))))
+
+(deftest test-train-iris
+  (testing "Testing training and export with Iris dataset."
+    (let [iris (read-iris-data)
+          sample (fn []
+                   (into-array Double/TYPE
+                               (take 4 (nth iris (rand (count iris))))))
+          input-vec-gen (fn [] (double-array [(rand 5) (rand 5) (rand 5)]))
+          som (train (make-som 4 64 64 input-vec-gen) sample 500 euclidean-dist)
+          um (u-matrix som euclidean-dist)
+          ]
+      ;;(pprint-u-matrix um)
+      (export-u-matrix um "iris.png" (list (->Annotation 32 32 "Hello")))
+      )))
