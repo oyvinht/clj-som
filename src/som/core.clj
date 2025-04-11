@@ -37,7 +37,7 @@
                  (Math/pow (- col-val mean) 2))
                row (means seqs)))
         seqs)))
-  
+
 (defn z-score-normalize [data]
   "Subtract coordinate mean from each coordinate value and divide by the standard deviation of that coordinate."
   (let [stdevs (map (fn [x] (Math/sqrt x)) (variances data))]
@@ -52,9 +52,8 @@
 ;;;;---------------------------------------------------------------------------
 ;;;; Datatypes
 ;;;;---------------------------------------------------------------------------
-(defrecord SOM
-    [^"[[[D" nodes ; A 3D array of nodes with weights
-     ])
+(defrecord SOM ; A record that for semantic reasons wrap nodes
+    [^"[[[D" nodes]) ; A 3D array of nodes with weights
 
 (defrecord Annotation
     [x y text])
@@ -74,6 +73,21 @@
          (aset ^"[[D" (aget ^"[[[D" a (int x)) y (input-vector-generator))))
      (SOM. a))))
 
+(defn- ^"[[[D" clone-nodes [som]
+  "Return a deep copy of a SOMs nodes."
+  (let [old-nodes ^"[[[D" (:nodes som)
+        new-som (make-som (alength ^"[D" (aget ^"[D" old-nodes 0 0))
+                          (alength ^"[[[D" old-nodes)
+                          (alength ^"[[D" (aget ^"[[D" old-nodes 0)))]
+    (loop [x (dec (alength ^"[[[D" old-nodes))
+           y (dec (alength ^"[[D" (aget ^"[[[D" old-nodes 0)))]
+      (aset ^"[[[D" (:nodes new-som) x y (aclone ^"[D" (aget ^"[[[D" old-nodes x y)))
+      (when (> x 0)
+        (if (> y 0)
+          (recur x (dec y))
+          (recur (dec x) y))))
+    (:nodes new-som)))
+
 (defn- find-bmu [som target-vec dist-fn]
   "Coords {:x x :y y} of best matching unit."
   (let [nodes ^"[[[D" (:nodes som)]
@@ -90,7 +104,7 @@
                                (aget nodes (int 0) (int 0)) target-vec)}
              (range (alength nodes)))
      :dist)))
-          
+
 (defn train
   ([som sample-generator num-iterations]
    (train som sample-generator num-iterations {}))
@@ -104,7 +118,7 @@ neighborhood-fn: [distance radius] Calc distance factor.
 Defaults to gaussian.
 radius-fn: [iteration num-iterations] Calc radius around BMU for iteration.
 Defaults to."
-   (let [new-nodes (aclone ^"[[[D" (:nodes som))
+   (let [new-nodes (clone-nodes som)
          x-size (alength new-nodes)
          y-size (alength ^"[[D" (aget new-nodes 0))
          options
@@ -120,7 +134,7 @@ Defaults to."
                           (fn [iteration total-iterations]
                             (* (/ (max x-size y-size) 2) ; Init radius
                                (Math/exp
-                                (- (/ iteration total-iterations))))))}]         
+                                (- (/ iteration total-iterations))))))}]
      (loop [iteration 0
             learning-rate ((:learning-rate-fn options) iteration num-iterations)
             radius ((:radius-fn options) iteration num-iterations)
