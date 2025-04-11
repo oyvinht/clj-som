@@ -147,7 +147,7 @@
                                          (- 1.0 (float (aget u-matrix x y)))
                                          (- 1.0 (float (aget u-matrix x y)))
                                          (- 1.0 (float (aget u-matrix x y)))))
-                         (.fillOval g
+                         (.fillRect g
                                     (* x scale)
                                     (- height (* (inc y) scale)) scale scale))
                        nil (range y-size)))
