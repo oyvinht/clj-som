@@ -45,11 +45,10 @@
       (aset a 2 0 (into-array Double/TYPE [1.0 3.0]))
       (aset a 2 1 (into-array Double/TYPE [1.0 1.0]))
       (aset a 2 2 (into-array Double/TYPE [1.0 2.0]))
-      ;;
       (let [um (u-matrix {:nodes a} euclidean-dist)]
         (pprint-u-matrix um)
         (export-u-matrix um "u-matrix.png")))))
-       
+
 (defn read-iris-data []
   (map (fn [line]
          (map (fn [col]
@@ -86,27 +85,17 @@
                                    :class (clojure.string/replace
                                       (nth c 4) #"Iris-" "")}))
           input-vec-gen (fn [] (double-array
-                                [;(+ 4.2 (rand 3.8))
-                                 ;(+ 1.9 (rand 2.6))
-                                 ;(+ 1.0 (rand 6.0))
-                                        ;(rand 2.6)
-                                 (rand 2)
+                                [(rand 2)
                                  (rand 2)
                                  (rand 2)
                                  (rand 2)]))
-          ;; Dim roughly = 5 * sqrt num-samples
           som (train (make-som 4 60 60 input-vec-gen) norm-sample 10)
           um (u-matrix som euclidean-dist)
-          ;;centers (take-last 4 (sort-by val (:bmu-counts som)))
           freqs (bmu-counts-w-class
                  som
                  norm-sample-w-class
                  150
-                 euclidean-dist)
-          ]
-      ;;(pprint/pprint freqs)
-      ;;(println normalized-iris)
-      ;;(pprint-u-matrix um)
+                 euclidean-dist)]
       (export-u-matrix um "iris.png"
                        (map (fn [f]
                               (let [class (key f)
@@ -114,7 +103,6 @@
                                     text (str class "(" cnt ")")]
                                 (->Annotation (first pos) (second pos) text)))
                             freqs)))))
-
 
 (def color-dataset
   (->
@@ -152,9 +140,7 @@
     (range 100))
    identity))
 
-;(defn normalize-vectors [nodes]
-
-(defn display-colors [som]
+(defn display-colors [som filename]
   (let [nodes (:nodes som)
         width (alength nodes)
         scale 5
@@ -182,7 +168,7 @@
                                      scale scale)))
                       nil (range height)))
             nil (range width))
-    (javax.imageio.ImageIO/write bi "png" (java.io.File. "colors.png"))))
+    (javax.imageio.ImageIO/write bi "png" (java.io.File. filename))))
 
 (deftest test-train-colors
   (let [color-sample (fn []
@@ -192,9 +178,9 @@
         input-vec-gen (fn [] (double-array
                               [(rand)(rand)(rand)]))
         ;; Dim roughly = 5 * sqrt num-samples
-        som (train (make-som 3 63 63 input-vec-gen) color-sample 10)
-        um (u-matrix som euclidean-dist)
-        ]
-    (display-colors som)
-    (export-u-matrix um "colors-um.png")))
-    
+        som (make-som 3 63 63 input-vec-gen)
+        trained-som (train som color-sample 20)
+        um (u-matrix trained-som euclidean-dist)]
+    (display-colors som "colors.png")
+    (display-colors trained-som "colors-trained.png")
+    (export-u-matrix um "colors-trained-um.png")))
