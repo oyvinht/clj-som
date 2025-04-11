@@ -126,11 +126,11 @@
           nil (reverse (range (alength ^"[D" (aget u-matrix 0))))))
 
 (defn export-u-matrix
-  ([^"[[D" u-matrix png-filename]
-   (export-u-matrix u-matrix png-filename nil))
-  ([^"[[D" u-matrix png-filename annotations]
+  ([^"[[D" u-matrix png-filename ^long scale]
+   (export-u-matrix u-matrix png-filename nil scale))
+  ([^"[[D" u-matrix png-filename annotations ^long scale]
    "Export PNG file with grayscale weights and annotations coords."
-   (let [scale 3
+   (let [scale (or scale 3)
          x-size (alength u-matrix)
          width (* x-size scale)
          y-size (alength ^"[D" (aget u-matrix 0))

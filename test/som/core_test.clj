@@ -47,7 +47,7 @@
       (aset a 2 2 (into-array Double/TYPE [1.0 2.0]))
       (let [um (u-matrix {:nodes a} euclidean-dist)]
         (pprint-u-matrix um)
-        (export-u-matrix um "u-matrix.png")))))
+        (export-u-matrix um "u-matrix.png" 1.0)))))
 
 (defn read-iris-data []
   (map (fn [line]
@@ -89,12 +89,12 @@
                                  (rand 2)
                                  (rand 2)
                                  (rand 2)]))
-          som (train (make-som 4 60 60 input-vec-gen) norm-sample 10)
+          som (train (make-som 4 5 5 input-vec-gen) norm-sample 10000)
           um (u-matrix som euclidean-dist)
           freqs (bmu-counts-w-class
                  som
                  norm-sample-w-class
-                 150
+                 150 ; Same as size of Iris dataset
                  euclidean-dist)]
       (export-u-matrix um "iris.png"
                        (map (fn [f]
@@ -102,7 +102,8 @@
                                     [pos cnt] (last (sort-by val (val f)))
                                     text (str class "(" cnt ")")]
                                 (->Annotation (first pos) (second pos) text)))
-                            freqs)))))
+                            freqs)
+                       96))))
 
 (def color-dataset
   (->
@@ -137,7 +138,7 @@
            [(+ 0.988 (rand 0.012)) (rand 0.01) (+ 0.988 (rand 0.012))]))
        data))
     nil
-    (range 100))
+    (range 20))
    identity))
 
 (defn display-colors [som filename]
@@ -178,9 +179,9 @@
         input-vec-gen (fn [] (double-array
                               [(rand)(rand)(rand)]))
         ;; Dim roughly = 5 * sqrt num-samples
-        som (make-som 3 63 63 input-vec-gen)
+        som (make-som 3 96 96 input-vec-gen)
         trained-som (train som color-sample 20)
         um (u-matrix trained-som euclidean-dist)]
     (display-colors som "colors.png")
     (display-colors trained-som "colors-trained.png")
-    (export-u-matrix um "colors-trained-um.png")))
+    (export-u-matrix um "colors-trained-um.png" 5)))
